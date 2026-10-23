@@ -12,7 +12,11 @@ except Exception:
 
 
 def theta(v, w):
-	return np.arccos(np.clip(v.dot(w) / (np.linalg.norm(v) * np.linalg.norm(w)), -1.0, 1.0))
+	nv = np.linalg.norm(v)
+	nw = np.linalg.norm(w)
+	if nv == 0.0 or nw == 0.0:
+		return 0.0
+	return np.arccos(np.clip(v.dot(w) / (nv * nw), -1.0, 1.0))
 
 
 def best_marker(cnts, min_area=300, min_circularity=0.35):
@@ -52,9 +56,9 @@ arm2_angle = 74
 arm1_angle = 72
 
 # HSV bounds, project values
-greenLower  = (38, 95, 72);   greenUpper  = (96, 255, 255)
-redLower    = (0, 122, 119);  redUpper    = (10, 255, 255)
-yellowLower = (15, 119, 76);  yellowUpper = (29, 255, 255)
+greenLower  = (64, 62, 57);   greenUpper  = (75, 255, 255)
+redLower    = (0, 118, 79);   redUpper    = (6, 255, 255)
+yellowLower = (15, 120, 84);  yellowUpper = (26, 255, 255)
 
 # Servo config
 BASE_START = 90    # startup base angle
@@ -72,7 +76,7 @@ import serial.tools.list_ports
 
 def find_arduino():
 	for p in serial.tools.list_ports.comports():
-		if p.device.startswith('/dev/cu.usb'):
+		if p.device.startswith('/dev/cu.usb') or p.device.startswith('/dev/cu.usbserial') or p.device.startswith('/dev/cu.usbmodem'):
 			return p.device
 	return None
 
@@ -316,7 +320,10 @@ while True:
 		# sync plus five angle bytes
 		if arduino is not None:
 			# drop firmware ACK lines
-			arduino.reset_input_buffer()
+			try:
+				arduino.reset_input_buffer()
+			except Exception:
+				pass
 			arduino.write(struct.pack('>BBBBBB', 0xAA, s1, s2, st, base_angle, claw_angle))
 		last_sent = (s1, s2, st, base_angle, claw_angle)
 

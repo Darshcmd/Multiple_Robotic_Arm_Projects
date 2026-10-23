@@ -16,35 +16,60 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 /*----------------------------------*/
 
 const byte SYNC_BYTE = 0xAA;
-const int PULSE_MIN = 150;  // ~0 deg at 60Hz
-const int PULSE_MAX = 600;  // ~180 deg at 60Hz
 
-/*--------The following values are the initial servo values--------*/
-int base_angle = 90;
-int arm1_angle = 72;
-int arm2_angle = 74;
-int tilt_angle = 60;
-int claw_angle = 10;
-/*-----------------------------------------*/
+/*--- Per-channel angle limits (degrees), from config.json arm_limits ---*/
+struct Limit { int lo; int hi; };
+static const Limit CH_LIMITS[5] = {
+  { 30, 150 },   // CH_BASE
+  { 40, 140 },   // CH_ARM1
+  { 40, 140 },   // CH_ARM2
+  { 40, 140 },   // CH_TILT
+  { 30, 90 },   // CH_CLAW (open/closed narrowed for safety)
+};
 
-int angleToPulse(int angle) {
-  int pulse = map(angle, 0, 180, PULSE_MIN, PULSE_MAX);
-  return constrain(pulse, PULSE_MIN, PULSE_MAX);
+/*--- Microsecond limits for the 9g servos (oscillator-independent) ---*/
+static const uint16_t US_MIN = 500;   // 0 deg
+static const uint16_t US_MAX = 2400;  // 180 deg
+
+/* Safe startup positions (degrees) - never strain the gripper at boot */
+static const int START_POS[5] = { 90, 90, 90, 90, 60 };
+
+int base_angle  = START_POS[0];
+int arm1_angle  = START_POS[1];
+int arm2_angle  = START_POS[2];
+int tilt_angle  = START_POS[3];
+int claw_angle  = START_POS[4];
+
+/* Map an angle (0..180) to microseconds (500..2400), then clamp to channel limits. */
+int angleToUs(int channel, int angle) {
+  int lo = CH_LIMITS[channel].lo;
+  int hi = CH_LIMITS[channel].hi;
+  angle = constrain(angle, lo, hi);
+  int us = map(angle, 0, 180, US_MIN, US_MAX);
+  return constrain(us, US_MIN, US_MAX);
+}
+
+void setChannelUs(uint8_t ch, int angle) {
+  pwm.writeMicroseconds(ch, (uint16_t)angleToUs(ch, angle));
 }
 
 void setup() {
   Wire.begin();
-  Serial.begin(9600);
+  Serial.begin(115200);
+
+  // 25 MHz is the PCA9685 internal oscillator (no crystal on this clone board).
+  // The old 27 MHz value made all pulse widths wrong.
   pwm.begin();
-  pwm.setOscillatorFrequency(27000000);  // typical for clone PCA9685 boards
+  pwm.setOscillatorFrequency(25000000);
   pwm.setPWMFreq(60);
   delay(100);
 
-  pwm.setPWM(CH_BASE,  0, angleToPulse(base_angle));
-  pwm.setPWM(CH_ARM1,  0, angleToPulse(arm1_angle));
-  pwm.setPWM(CH_ARM2,  0, angleToPulse(arm2_angle));
-  pwm.setPWM(CH_TILT,  0, angleToPulse(tilt_angle));
-  pwm.setPWM(CH_CLAW,  0, angleToPulse(claw_angle));
+  // Drive every channel to its safe startup position.
+  setChannelUs(CH_BASE,  base_angle);
+  setChannelUs(CH_ARM1,  arm1_angle);
+  setChannelUs(CH_ARM2,  arm2_angle);
+  setChannelUs(CH_TILT,  tilt_angle);
+  setChannelUs(CH_CLAW,  claw_angle);
 
   Serial.println();
   Serial.println("ARM FIRMWARE V2 READY (5-angle: arm1,arm2,tilt,base,claw)");
@@ -73,11 +98,13 @@ void loop() {
       tilt_angle = tilt;
       base_angle = base;
       claw_angle = claw;
-      pwm.setPWM(CH_ARM1, 0, angleToPulse(arm1_angle));
-      pwm.setPWM(CH_ARM2, 0, angleToPulse(arm2_angle));
-      pwm.setPWM(CH_TILT, 0, angleToPulse(tilt_angle));
-      pwm.setPWM(CH_BASE, 0, angleToPulse(base_angle));
-      pwm.setPWM(CH_CLAW, 0, angleToPulse(claw_angle));
+
+      setChannelUs(CH_ARM1, arm1_angle);
+      setChannelUs(CH_ARM2, arm2_angle);
+      setChannelUs(CH_TILT, tilt_angle);
+      setChannelUs(CH_BASE,  base_angle);
+      setChannelUs(CH_CLAW,  claw_angle);
+
       // ACK confirms command delivery
       Serial.print("ACK A1=");  Serial.print(arm1_angle);
       Serial.print(" A2=");     Serial.print(arm2_angle);

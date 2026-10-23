@@ -1,0 +1,101 @@
+{
+  "arm_limits": {
+    "arm1_max": 160,
+    "arm1_min": 50,
+    "arm2_max": 154,
+    "arm2_min": 10,
+    "base_max": 160,
+    "base_min": 20,
+    "claw_closed": 10,
+    "claw_open": 120,
+    "tilt_max": 150,
+    "tilt_min": 10
+  },
+  "camera": {
+    "backend": "avfoundation",
+    "blur_kernel": 5,
+    "dilate_iter": 2,
+    "erode_iter": 1,
+    "frame_width": 800,
+    "min_radius_px": 6,
+    "source": 0
+  },
+  "mapping": {
+    "arm1_for_ny_0": 55,
+    "arm1_for_ny_1": 135,
+    "arm2_for_ny_0": 120,
+    "arm2_for_ny_1": 40,
+    "base_for_nx_0": 150,
+    "base_for_nx_1": 30,
+    "tilt_fixed": 60,
+    "note": "nx=0 is left edge of frame, nx=1 is right edge. ny=0 is top, ny=1 is bottom. Only base+arm1+arm2 track; tilt parks at tilt_fixed. Narrower than firmware 0-180 so the arm never slams its end-stops."
+  },
+  "red_hsv": {
+    "comment": "Laptop-cam retrain: card H~165 S~127 V~130. S floor 70 cuts desk-leak (S~62). Retrain via train_red.py --hex.",
+    "lower1": [
+      0,
+      70,
+      100
+    ],
+    "upper1": [
+      8,
+      255,
+      255
+    ],
+    "lower2": [
+      158,
+      70,
+      100
+    ],
+    "upper2": [
+      180,
+      255,
+      255
+    ]
+  },
+  "dot_hsv": {
+    "comment": "Dot V floor lowered 60->40 for the darker laptop image.",
+    "lower": [88, 80, 40],
+    "upper": [112, 255, 175]
+  },
+  "servo": {
+    "comment": "Eye-in-hand IBVS gains: deg of joint per unit normalized error. Flip sign if arm runs from target. gain_tilt=0 keeps the wrist parked (base+arm1+arm2 do the work).",
+    "gain_base": 25.0,
+    "gain_arm1": 20.0,
+    "gain_arm2": 12.0,
+    "gain_tilt": 0.0,
+    "deadband": 0.03,
+    "size_hold": false,
+    "target_size": 0.35,
+    "size_deadband": 0.04,
+    "gain_size": 15.0
+  },
+  "smoothing": {
+    "angle_ema_alpha": 0.25,
+    "deadband_deg": 1.0,
+    "deadband_px": 4.0,
+    "max_step_arm1": 3.0,
+    "max_step_arm2": 3.0,
+    "max_step_base": 3.0,
+    "max_step_tilt": 2.0,
+    "pixel_ema_alpha": 0.4,
+    "tx_min_interval_s": 0.05
+  },
+  "startup_pose": {
+    "arm1": 72,
+    "arm2": 74,
+    "base": 90,
+    "claw": 10,
+    "tilt": 60
+  },
+  "tracking": {
+    "hold_last_pose_on_loss": true,
+    "lost_timeout_s": 1.0,
+    "max_lost_frames_before_freeze": 10,
+    "min_area": 400,
+    "min_circularity": 0.55,
+    "min_dot_area": 300,
+    "min_squareness": 0.45,
+    "workspace_margin": 0.05
+  }
+}

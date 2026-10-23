@@ -1,8 +1,12 @@
 # Python
 venv/
+venv_broken/
 __pycache__/
 *.pyc
 *.pyo
+
+# Downloaded MediaPipe models (see Gesture-Controlled-MeArm/README.md)
+Gesture-Controlled-MeArm/models/*.task
 
 # macOS
 .DS_Store

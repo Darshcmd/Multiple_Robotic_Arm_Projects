@@ -1,0 +1,19 @@
+{
+  "serial": {
+    "baud": 9600,
+    "timeout": 2.5
+  },
+  "arm_limits": {
+    "arm1": [40, 140],
+    "arm2": [40, 140],
+    "tilt": [40, 140],
+    "base": [30, 150],
+    "claw": [30, 90]
+  },
+  "hand": {
+    "palm_min": 0.04,
+    "palm_max": 0.16,
+    "pinch_min": 0.05,
+    "pinch_max": 0.60
+  }
+}
