@@ -300,6 +300,24 @@ Edit \`config.json\`:
 | \`test_live_gesture.py\` | Live hand -> arm streaming check |
 | \`test_sigterm_shutdown.py\` | SIGTERM -> clean exit verification |
 
+### Architecture Diagram
+
+```mermaid
+flowchart TD
+    CAM[Webcam] --> TR[hand_track.py: MediaPipe Hands]
+    TR --> SIG[5 metrics: base, arm1, arm2, tilt, claw]
+    SIG --> CFG[config.json mapping]
+    CFG --> EMA[EMA smoothing]
+    EMA --> ANG[Range check]
+    ANG --> LINK[main.py Serial ArmLink]
+    LINK --> ARDU[Arduino + PCA9685]
+    ARDU --> SERVO[Servos]
+    USER[(You)] --> CAM
+    USER -->|Keyboard| LINK
+```
+
+---
+
 ## Project 3: Red-Dot Object Tracker
 
 > **Use this when:** you want the most forgiving tracking — a single red card
